@@ -5,7 +5,7 @@ from config import LOG_DIR
 
 os.makedirs(LOG_DIR,exist_ok=True)
 
-log_file=os.path.join(LOG_DIR,f"{datetime.now().strftime("%d-%m-%Y, %H:%M:%S")}.log")
+log_file=os.path.join(LOG_DIR,f"{datetime.now().strftime('%d-%m-%Y')}.log")
 
 
 
@@ -21,8 +21,8 @@ def get_logger(name:str)-> logging.Logger:
     
     
     formatting=logging.Formatter(
-        fmt="[(asctime)s (levelname)s (name)s - (message)]",
-        datefmt="%Y-%m-%d %H:%M:%S"
+        fmt="[%(asctime)s %(levelname)s %(name)s - %(message)s]",
+        datefmt='%Y-%m-%d %H:%M:%S'
     )
     
     console_handler=logging.StreamHandler()
