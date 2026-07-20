@@ -18,9 +18,10 @@ def test_transform_data(mock_to_csv, mock_makedirs, dummy_data):
     assert transformed_df["Churn"].isin([0, 1]).all()
 
 @patch("os.makedirs")
+@patch("pandas.DataFrame.to_csv")
 @patch("builtins.open", new_callable=mock_open)
 @patch("pickle.dump")
-def test_get_preprocessor(mock_pickle_dump, mock_file_open, mock_makedirs, dummy_data):
+def test_get_preprocessor(mock_pickle_dump, mock_file_open, mock_to_csv, mock_makedirs, dummy_data):
     transformer = DataTransformation(dummy_data)
     transformed_df = transformer.transform_data()
     preprocessor = transformer.get_preprocessor(transformed_df)
