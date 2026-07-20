@@ -21,7 +21,9 @@ jobs:
 
             
             - name: Install ruff library
-              run: pip install ruff
+              run: |
+                pip install uv
+                uv pip install --system ruff
 
             
             - name: check the linting of code
@@ -40,9 +42,10 @@ jobs:
                   python-version: '3.11'
 
             
-            - name: Install pytest library
-              run: pip install pytest
-
+            - name: Install dependencies
+              run: |
+                pip install uv
+                uv pip install --system -r requirements.txt
             
             - name: check the linting of code
               run: pytest
