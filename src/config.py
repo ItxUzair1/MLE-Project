@@ -16,3 +16,8 @@ TABLE_NAME=config["data"]["table_name"]
 RAW_PATH=config["data"]["raw_path"]
 PROCESSED_DATA_PATH=config["data"]["processed_path"]
 PREPROCESSOR_PATH=config["artifacts"]["preprocessor_path"]
+
+
+TARGET_COLUMN="Churn"
+TEST_SIZE=config["model"]["test_size"]
+MODEL_PATH=config["artifacts"]["model_path"]

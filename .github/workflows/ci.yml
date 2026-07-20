@@ -1,0 +1,52 @@
+name: Telcom Churn Prediction
+
+
+on:
+    push:
+        branches: [ main ]
+
+
+jobs:
+    lint:
+        runs-on: ubuntu-latest
+        
+        steps:
+            - name: Checkout the code
+              uses: actions/checkout@v4
+
+            - name: Install the python
+              uses: actions/setup-python@v5
+              with:
+                python-version: '3.11'
+
+            
+            - name: Install ruff library
+              run: pip install ruff
+
+            
+            - name: check the linting of code
+              run: ruff check . --fix
+    test:
+        needs: lint
+        runs-on: ubuntu-latest
+        
+        steps:
+            - name: Checkout the code
+              uses: actions/checkout@v4
+
+            - name: Install the python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: '3.11'
+
+            
+            - name: Install pytest library
+              run: pip install pytest
+
+            
+            - name: check the linting of code
+              run: pytest
+        
+
+
+    

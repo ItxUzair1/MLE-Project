@@ -30,3 +30,13 @@ src/__pycache__
 
 
 artifacts/
+
+build/
+
+data/external/
+data/raw/
+data/processed/
+
+mle_project.egg-info/*
+
+logs/
