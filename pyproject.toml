@@ -5,14 +5,15 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "dotenv>=0.9.9",
-    "fastapi>=0.139.2",
-    "matplotlib>=3.11.1",
-    "numpy>=2.4.6",
-    "pandas>=3.0.3",
-    "scikit-learn>=1.9.0",
-    "sqlalchemy>=2.0.51",
-    "uvicorn>=0.51.0",
+    "python-dotenv>=1.0.1",
+    "fastapi>=0.115.0",
+    "great-expectations==0.18.21",
+    "matplotlib>=3.8.0",
+    "numpy>=1.26,<2",
+    "pandas>=2.2,<3",
+    "scikit-learn>=1.5,<1.6",
+    "sqlalchemy>=2.0",
+    "uvicorn>=0.30",
 ]
 [tool.setuptools.packages.find]
 where = ["src"]
