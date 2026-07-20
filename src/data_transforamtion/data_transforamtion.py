@@ -6,6 +6,7 @@ from src.logger.logger import get_logger
 from src.exception.exception import CustomException
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from src.config import PREPROCESSOR_PATH
 
 logger = get_logger(__name__)
 
@@ -78,7 +79,7 @@ class DataTransformation:
             ])
 
             os.makedirs("artifacts", exist_ok=True)
-            with open("artifacts/preprocessor.pkl", "wb") as f:
+            with open(PREPROCESSOR_PATH, "wb") as f:
                 pickle.dump(preprocessor, f)
 
             logger.info("Preprocessor saved to artifacts/preprocessor.pkl")

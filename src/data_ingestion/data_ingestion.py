@@ -5,12 +5,10 @@ from dotenv import load_dotenv
 import os
 import sys
 from sqlalchemy import create_engine
+from src.config import DATABASE_PATH,TABLE_NAME
 
-load_dotenv()
 logger=get_logger(__name__)
 
-DATABASE_PATH=os.getenv("DATABASE_PATH")
-TABLE_NAME=os.getenv("TABLE_NAME")
 
 
 class DataIngestion():
@@ -36,7 +34,7 @@ class DataIngestion():
             
         except Exception as e:
             logger.error("Data did not laod to the database")
-            raise CustomException(e,sys)
+            raise CustomException(e,sys) # type: ignore
         
         
     
@@ -54,12 +52,7 @@ class DataIngestion():
         
         except Exception as e:
             logger.error("Data did not laod from the database")
-            raise CustomException(e,sys)
+            raise CustomException(e,sys) # type: ignore
         
 
-if __name__ == "__main__":
-    ingestor=DataIngestion("data/raw/telcom.csv")
-    ingestor.load_data_to_database()
-    df=ingestor.load_data_from_database()
-    print(df.shape)
-            
+

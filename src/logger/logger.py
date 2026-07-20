@@ -1,7 +1,7 @@
 import logging
 import os
 from datetime import datetime
-from config import LOG_DIR
+from src.config import LOG_DIR
 
 os.makedirs(LOG_DIR,exist_ok=True)
 

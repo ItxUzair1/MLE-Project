@@ -1,0 +1,18 @@
+# config/config.yaml
+logs:
+  log_dir: "logs"
+
+data:
+  raw_path: "data/raw/telcom.csv"
+  processed_path: "data/processed/transformed_data.csv"
+  database_path: "data/database/mlproject.db"
+  table_name: "telco_churn"
+
+artifacts:
+  preprocessor_path: "artifacts/preprocessor.pkl"
+  model_path: "artifacts/model.pkl"
+
+model:
+  test_size: 0.2
+  random_state: 42
+  n_estimators: 100
