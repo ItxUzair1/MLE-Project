@@ -1,0 +1,8 @@
+{
+  "include": ["src", "tests", "main.py"],
+  "extraPaths": ["."],
+  "pythonVersion": "3.11",
+  "venvPath": ".",
+  "venv": ".venv",
+  "pythonPlatform": "Windows"
+}
