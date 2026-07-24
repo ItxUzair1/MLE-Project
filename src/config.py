@@ -21,3 +21,5 @@ PREPROCESSOR_PATH=config["artifacts"]["preprocessor_path"]
 TARGET_COLUMN="Churn"
 TEST_SIZE=config["model"]["test_size"]
 MODEL_PATH=config["artifacts"]["model_path"]
+MODEL_NAME=config["model"]["model_name"]
+EXPERIMENT_NAME=config["model"]["experiment_name"]

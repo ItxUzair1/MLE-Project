@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 from datetime import datetime
 from src.config import LOG_DIR
 
@@ -25,7 +26,8 @@ def get_logger(name:str)-> logging.Logger:
         datefmt='%Y-%m-%d %H:%M:%S'
     )
     
-    console_handler=logging.StreamHandler()
+    # Use utf-8 encoded stdout to avoid cp1252 UnicodeEncodeError on Windows
+    console_handler=logging.StreamHandler(stream=open(sys.stdout.fileno(), mode='w', encoding='utf-8', closefd=False))
     console_handler.setLevel(logging.DEBUG)
     console_handler.setFormatter(formatting)
     

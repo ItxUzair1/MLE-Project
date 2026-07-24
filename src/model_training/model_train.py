@@ -55,7 +55,7 @@ class ModelTraining:
                     f1        = f1_score(y_test, y_pred)
 
                     logger.info(
-                        f"{name} → accuracy: {accuracy:.4f}  "
+                        f"{name} -> accuracy: {accuracy:.4f}  "
                         f"recall: {recall:.4f}  "
                         f"precision: {precision:.4f}  "
                         f"f1: {f1:.4f}"
@@ -67,7 +67,7 @@ class ModelTraining:
                     mlflow.log_metric("recall",    float(recall))
                     mlflow.log_metric("precision", float(precision))
                     mlflow.log_metric("f1",        float(f1))
-                    mlflow_sklearn.log_model(model, name)
+                    mlflow_sklearn.log_model(model, name, serialization_format="cloudpickle")
 
                     # track best
                     if f1 > best_f1:
@@ -89,11 +89,12 @@ class ModelTraining:
                 mlflow_sklearn.log_model(
                     sk_model=best_model,
                     artifact_path="best_model",
-                    registered_model_name="telco-churn-model"
+                    registered_model_name="telco-churn-model",
+                    serialization_format="cloudpickle"
                 )
             logger.info("Best model registered to MLflow Model Registry")
 
-            return best_model, best_name, best_f1
+            return best_model, best_name, best_f1, X_test, y_test
 
         except Exception as e:
             logger.error("Model training failed")
