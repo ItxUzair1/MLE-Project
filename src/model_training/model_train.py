@@ -3,6 +3,7 @@ from src.exception.exception import CustomException
 import sys
 import os
 import pickle
+import numpy as np
 import pandas as pd
 import mlflow
 import mlflow.sklearn as mlflow_sklearn
@@ -15,7 +16,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from sklearn.naive_bayes import GaussianNB
-from src.config import PREPROCESSOR_PATH, TARGET_COLUMN, TEST_SIZE, MODEL_PATH
+from src.config import PREPROCESSOR_PATH, TARGET_COLUMN, TEST_SIZE, MODEL_PATH, SHAP_BACKGROUND_PATH
 
 logger = get_logger(__name__)
 
@@ -127,9 +128,18 @@ class ModelTraining:
 
             X_train = preprocessor.fit_transform(X_train)
             X_test  = preprocessor.transform(X_test)  # only transform never fit
-            
+
             with open(PREPROCESSOR_PATH, "wb") as f:
                 pickle.dump(preprocessor, f)
+
+            # Save a background sample for SHAP explanations at inference time
+            import scipy.sparse as sp
+            X_train_dense = X_train.toarray() if sp.issparse(X_train) else np.array(X_train)
+            n_samples = min(100, X_train_dense.shape[0])
+            indices = np.random.choice(X_train_dense.shape[0], n_samples, replace=False)
+            background = X_train_dense[indices]
+            np.save(SHAP_BACKGROUND_PATH, background)
+            logger.info(f"SHAP background dataset saved ({background.shape[0]} samples)")
 
             logger.info("Preprocessor applied and fitted preprocessor saved successfully")
 

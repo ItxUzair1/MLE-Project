@@ -9,7 +9,7 @@ from mlflow.tracking import MlflowClient
 
 from src.logger.logger import get_logger
 from src.exception.exception import CustomException
-from src.config import MODEL_PATH, PREPROCESSOR_PATH, MODEL_NAME
+from src.config import MODEL_PATH, PREPROCESSOR_PATH, MODEL_NAME, SHAP_BACKGROUND_PATH
 
 logger = get_logger(__name__)
 
@@ -17,11 +17,13 @@ class PredictionPipeline:
     def __init__(self):
         self.model = self.load_model()
         self.preprocessor = self.load_preprocessor()
+        self.shap_background = self.load_shap_background()
         
     def load_model(self):
         try:
             logger.info(f"Attempting to load model '{MODEL_NAME}' from MLflow Model Registry")
             client = MlflowClient()
+            # pyrefly: ignore [deprecated]
             latest_versions = client.get_latest_versions(name=MODEL_NAME)
             
             if latest_versions:
@@ -49,6 +51,15 @@ class PredictionPipeline:
             logger.error("Failed to load preprocessor")
             raise CustomException(e, sys)
 
+    def load_shap_background(self):
+        try:
+            background = np.load(SHAP_BACKGROUND_PATH)
+            logger.info(f"SHAP background loaded: {background.shape}")
+            return background
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"SHAP background not found, will use prediction row as fallback: {e}")
+            return None
+
     def predict(self, df: pd.DataFrame):
         try:
             # TotalCharges is float, ensure it's not empty if not validated by schema
@@ -69,6 +80,13 @@ class PredictionPipeline:
             feature_names = self.preprocessor.get_feature_names_out()
             shap_result = []
 
+            # Convert sparse matrix → dense numpy (required by all SHAP explainers)
+            import scipy.sparse as sp
+            dense_data = transformed_data.toarray() if sp.issparse(transformed_data) else np.array(transformed_data)
+
+            # Use saved training background; fall back to prediction row if not available
+            background = self.shap_background if self.shap_background is not None else dense_data
+
             def _extract_top_features(shap_vals_row):
                 feature_importance = list(zip(feature_names, shap_vals_row))
                 feature_importance.sort(key=lambda x: abs(x[1]), reverse=True)
@@ -81,35 +99,45 @@ class PredictionPipeline:
             try:
                 # Tree models (RandomForest, XGBoost, DecisionTree, etc.)
                 explainer = shap.TreeExplainer(self.model)
-                shap_values = explainer.shap_values(transformed_data)
+                shap_values = explainer.shap_values(dense_data)
                 if isinstance(shap_values, list):
                     shap_values = shap_values[1]  # positive class for binary
                 shap_result = _extract_top_features(shap_values[0])
                 logger.info("SHAP via TreeExplainer")
-            except Exception:  # noqa: BLE001
+            except Exception as tree_err:  # noqa: BLE001
+                logger.warning(f"TreeExplainer failed: {tree_err}")
                 try:
-                    # Linear models (LogisticRegression, etc.)
-                    explainer = shap.LinearExplainer(self.model, transformed_data)
-                    shap_values = explainer.shap_values(transformed_data)
+                    # Linear models (LogisticRegression, LinearSVC, etc.)
+                    # pyrefly: ignore [implicit-import]
+                    masker = shap.maskers.Independent(background)
+                    explainer = shap.LinearExplainer(self.model, masker)
+                    shap_values = explainer.shap_values(dense_data)
                     if isinstance(shap_values, list):
                         shap_values = shap_values[1]
                     shap_result = _extract_top_features(shap_values[0])
                     logger.info("SHAP via LinearExplainer")
-                except Exception:  # noqa: BLE001
+                except Exception as lin_err:  # noqa: BLE001
+                    logger.warning(f"LinearExplainer failed: {lin_err}")
                     try:
-                        # Generic fallback for any model
-                        explainer = shap.KernelExplainer(
-                            self.model.predict_proba,
-                            shap.sample(transformed_data, 50)
-                        )
-                        shap_values = explainer.shap_values(transformed_data, nsamples=100)
-                        if isinstance(shap_values, list):
-                            shap_values = shap_values[1]
+                        # Generic fallback for any model (KNN, SVM, NaiveBayes, etc.)
+                        bg_sample = shap.sample(background, min(50, background.shape[0]))
+
+                        # Wrap predict_proba to return only positive class probability (1D)
+                        # to avoid "truth value of an array is ambiguous" in SHAP internals
+                        if hasattr(self.model, "predict_proba"):
+                            predict_fn = lambda x: self.model.predict_proba(x)[:, 1]  # noqa: E731
+                        else:
+                            # pyrefly: ignore [missing-attribute]
+                            predict_fn = self.model.predict
+
+                        explainer = shap.KernelExplainer(predict_fn, bg_sample)
+                        shap_values = explainer.shap_values(dense_data, nsamples=100)
+                        # shap_values is now a plain 2D array (not a list) since predict_fn is 1D
                         shap_result = _extract_top_features(shap_values[0])
                         logger.info("SHAP via KernelExplainer")
-                    except Exception as e:  # noqa: BLE001
-                        logger.warning(f"All SHAP explainers failed: {e}")
-                
+                    except Exception as kernel_err:  # noqa: BLE001
+                        logger.warning(f"All SHAP explainers failed: {kernel_err}")
+
             return {
                 "prediction": int(prediction),
                 "probability": float(probability),

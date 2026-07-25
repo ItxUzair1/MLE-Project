@@ -11,6 +11,7 @@ data:
 artifacts:
   preprocessor_path: "artifacts/preprocessor.pkl"
   model_path: "artifacts/model.pkl"
+  shap_background_path: "artifacts/shap_background.npy"
 
 model:
   test_size: 0.2
