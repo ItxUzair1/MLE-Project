@@ -41,6 +41,9 @@ mle_project.egg-info/*
 
 logs/
 
+# Databases
+data/database/
+
 # MLflow
 mlruns/
 mlflow.db

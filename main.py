@@ -11,6 +11,7 @@ app = FastAPI(title="Telco Churn Prediction API")
 # Initialize pipeline lazily to avoid loading during test collection if any
 pipeline = None
 
+# pyrefly: ignore [deprecated]
 @app.on_event("startup")
 def startup_event():
     global pipeline
