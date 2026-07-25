@@ -11,6 +11,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
 from xgboost import XGBClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.naive_bayes import GaussianNB
 from src.config import PREPROCESSOR_PATH, TARGET_COLUMN, TEST_SIZE, MODEL_PATH
 
 logger = get_logger(__name__)
@@ -30,7 +34,11 @@ class ModelTraining:
             models = {
                 "LogisticRegression": LogisticRegression(),
                 "RandomForest":       RandomForestClassifier(),
-                "XGBoost":            XGBClassifier()
+                "XGBoost":            XGBClassifier(),
+                "DecisionTree":       DecisionTreeClassifier(),
+                "KNN":                KNeighborsClassifier(),
+                "SVM":                SVC(),
+                "NaiveBayes":         GaussianNB()
             }
 
             best_model = None
@@ -77,24 +85,24 @@ class ModelTraining:
 
             logger.info(f"Best model: {best_name} with F1: {best_f1:.4f}")
 
-
-            os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
-            with open(MODEL_PATH, "wb") as f:
-                pickle.dump(best_model, f)
-            logger.info(f"Best model saved to {MODEL_PATH}")
-
-            with mlflow.start_run(run_name=f"{best_name}-final-registered"):
-                mlflow.log_param("best_model", best_name)
-                mlflow.log_metric("best_f1",   float(best_f1))
-                mlflow_sklearn.log_model(
-                    sk_model=best_model,
-                    artifact_path="best_model",
-                    registered_model_name="telco-churn-model",
-                    serialization_format="cloudpickle"
-                )
-            logger.info("Best model registered to MLflow Model Registry")
-
-            return best_model, best_name, best_f1, X_test, y_test
+            # Register the baseline model just for record keeping
+            with mlflow.start_run(run_name=f"{best_name}-baseline"):
+                mlflow.log_param("baseline_model", best_name)
+                mlflow.log_metric("baseline_f1", float(best_f1))
+            
+            # --- HYPERPARAMETER TUNING ---
+            logger.info(f"Starting hyperparameter tuning for {best_name}")
+            from src.model_training.hyperparameter_tuning import HyperparameterTuning
+            tuner = HyperparameterTuning(
+                model_name=best_name, 
+                X_train=X_train, X_test=X_test, 
+                y_train=y_train, y_test=y_test
+            )
+            
+            best_params, tuned_f1 = tuner.tune_model(n_trials=10) # 10 trials for speed
+            tuned_model, final_f1 = tuner.train_best_model(best_params)
+            
+            return tuned_model, f"{best_name} (Tuned)", final_f1, X_test, y_test
 
         except Exception as e:  # noqa: BLE001
             logger.error("Model training failed")

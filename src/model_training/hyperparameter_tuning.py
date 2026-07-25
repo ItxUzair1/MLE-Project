@@ -8,6 +8,10 @@ import sys
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from xgboost import XGBClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import f1_score
 import mlflow.sklearn as mlflow_sklearn
 import os
@@ -44,13 +48,44 @@ class HyperparameterTuning:
                 }
                 model = XGBClassifier(**params, random_state=42, eval_metric="logloss")
             
-            else:
+            elif self.model_name == "DecisionTree":
+                params = {
+                    "max_depth": trial.suggest_int("max_depth", 3, 20),
+                    "min_samples_split": trial.suggest_int("min_samples_split", 2, 10),
+                    "min_samples_leaf": trial.suggest_int("min_samples_leaf", 1, 5)
+                }
+                model = DecisionTreeClassifier(**params, random_state=42)
+            
+            elif self.model_name == "KNN":
+                params = {
+                    "n_neighbors": trial.suggest_int("n_neighbors", 3, 20),
+                    "weights": trial.suggest_categorical("weights", ["uniform", "distance"])
+                }
+                model = KNeighborsClassifier(**params)
+            
+            elif self.model_name == "SVM":
+                params = {
+                    "C": trial.suggest_float("C", 0.1, 10.0),
+                    "kernel": trial.suggest_categorical("kernel", ["linear", "rbf", "poly"])
+                }
+                model = SVC(**params, random_state=42)
+            
+            elif self.model_name == "NaiveBayes":
+                params = {
+                    "var_smoothing": trial.suggest_float("var_smoothing", 1e-9, 1e-5, log=True)
+                }
+                model = GaussianNB(**params)
+            
+            elif self.model_name == "LogisticRegression":
                 params = {
                 "C":        trial.suggest_float("C", 0.01, 10.0),
                 "solver":   trial.suggest_categorical("solver", ["lbfgs", "liblinear"]),
                 "max_iter": trial.suggest_int("max_iter", 100, 500),
                 }
                 model = LogisticRegression(**params, random_state=42)
+                
+            else:
+                raise ValueError(f"Unsupported model: {self.model_name}")
 
             model.fit(self.X_train,self.y_train)
             y_pred=model.predict(self.X_test)
@@ -92,6 +127,14 @@ class HyperparameterTuning:
 
             elif self.model_name == "LogisticRegression":
                 model = LogisticRegression(**best_params, random_state=42)
+            elif self.model_name == "DecisionTree":
+                model = DecisionTreeClassifier(**best_params, random_state=42)
+            elif self.model_name == "KNN":
+                model = KNeighborsClassifier(**best_params)
+            elif self.model_name == "SVM":
+                model = SVC(**best_params, random_state=42)
+            elif self.model_name == "NaiveBayes":
+                model = GaussianNB(**best_params)
             else:
                 raise ValueError(f"Unsupported model: {self.model_name}")
 
@@ -103,8 +146,12 @@ class HyperparameterTuning:
 
             mlflow.set_experiment("Telco Churn Prediction")
 
-            with mlflow.start_run(run_name=f"{self.model_name}-tuned-final"):
+            os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
+            with open(MODEL_PATH, "wb") as f:
+                pickle.dump(model, f)
+            logger.info(f"Tuned model saved to {MODEL_PATH}")
 
+            with mlflow.start_run(run_name=f"{self.model_name}-tuned-final"):
                 mlflow.log_params(best_params)
                 mlflow.log_param("model", self.model_name)
                 mlflow.log_metric("f1_score", float(f1))
@@ -114,16 +161,11 @@ class HyperparameterTuning:
                 mlflow_sklearn.log_model(
                     sk_model=model,
                     artifact_path="tuned_model",
-                    registered_model_name="telco-churn-model"  # new version
+                    registered_model_name="telco-churn-model",
+                    serialization_format="cloudpickle"
                 )
 
             logger.info("Tuned model registered to MLflow Model Registry")
-
-            os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
-            with open(MODEL_PATH, "wb") as f:
-                pickle.dump(model, f)
-
-            logger.info(f"Tuned model saved to {MODEL_PATH}")
 
             return model, f1
 
