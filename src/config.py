@@ -24,3 +24,7 @@ MODEL_PATH=config["artifacts"]["model_path"]
 MODEL_NAME=config["model"]["model_name"]
 EXPERIMENT_NAME=config["model"]["experiment_name"]
 SHAP_BACKGROUND_PATH=config["artifacts"]["shap_background_path"]
+
+import os  # noqa: E402
+DAGSHUB_REPO_OWNER = os.getenv("DAGSHUB_REPO_OWNER", "muhammaduzair1411")
+DAGSHUB_REPO_NAME  = os.getenv("DAGSHUB_REPO_NAME",  "my-first-repo")

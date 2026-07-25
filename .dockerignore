@@ -12,6 +12,7 @@ logs/
 mlruns/
 mlflow.db
 data/
+artifacts/
 uv.lock
 pyproject.toml
 .env

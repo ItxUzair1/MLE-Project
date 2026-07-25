@@ -16,7 +16,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from sklearn.naive_bayes import GaussianNB
-from src.config import PREPROCESSOR_PATH, TARGET_COLUMN, TEST_SIZE, MODEL_PATH, SHAP_BACKGROUND_PATH
+from src.config import PREPROCESSOR_PATH, TARGET_COLUMN, TEST_SIZE, MODEL_PATH, SHAP_BACKGROUND_PATH, EXPERIMENT_NAME
 
 logger = get_logger(__name__)
 
@@ -140,6 +140,18 @@ class ModelTraining:
             background = X_train_dense[indices]
             np.save(SHAP_BACKGROUND_PATH, background)
             logger.info(f"SHAP background dataset saved ({background.shape[0]} samples)")
+
+            # Log preprocessor and SHAP background to DAGsHub/MLflow so the
+            # prediction pipeline can load them remotely (no local artifacts needed)
+            mlflow.set_experiment(EXPERIMENT_NAME)
+            with mlflow.start_run(run_name="pipeline-artifacts") as artifacts_run:
+                mlflow.set_tag("artifact_type", "pipeline_artifacts")
+                mlflow.log_artifact(PREPROCESSOR_PATH, artifact_path="pipeline")
+                mlflow.log_artifact(SHAP_BACKGROUND_PATH, artifact_path="pipeline")
+                logger.info(
+                    f"Preprocessor & SHAP background logged to MLflow "
+                    f"(run_id: {artifacts_run.info.run_id})"
+                )
 
             logger.info("Preprocessor applied and fitted preprocessor saved successfully")
 

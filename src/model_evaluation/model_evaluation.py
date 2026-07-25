@@ -24,6 +24,7 @@ from src.config import (
     MODEL_NAME,
     EXPERIMENT_NAME
 )
+from src.utils.dagshub_init import init_dagshub
 
 logger = get_logger(__name__)
 
@@ -124,7 +125,8 @@ class ModelEvaluation:
             plt.close(fig)
             logger.info(f"Confusion matrix plot saved to {cm_plot_path}")
 
-            # 5. Log metrics and artifacts to MLflow
+            # 5. Log metrics and artifacts to DAGsHub MLflow
+            init_dagshub()
             mlflow.set_experiment(EXPERIMENT_NAME)
             with mlflow.start_run(run_name="model-evaluation"):
                 mlflow.log_param("evaluated_model", self.model_name)

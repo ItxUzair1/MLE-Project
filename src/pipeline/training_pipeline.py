@@ -7,6 +7,7 @@ from src.data_validation.data_validation import DataValidation
 from src.data_transforamtion.data_transforamtion import DataTransformation
 from src.model_training.model_train import ModelTraining
 from src.model_evaluation.model_evaluation import ModelEvaluation
+from src.utils.dagshub_init import init_dagshub
 
 logger = get_logger(__name__)
 
@@ -25,6 +26,10 @@ class TrainingPipeline:
         5. Model Evaluation
         """
         try:
+            # Initialise DAGsHub remote MLflow tracking first — all subsequent
+            # MLflow calls (training, tuning, evaluation) will use DAGsHub
+            init_dagshub()
+
             logger.info("==========================================")
             logger.info(">>> STARTING TRAINING PIPELINE <<<")
             logger.info("==========================================")
