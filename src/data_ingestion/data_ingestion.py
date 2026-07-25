@@ -28,6 +28,7 @@ class DataIngestion():
             os.makedirs(os.path.dirname(self.database_path),exist_ok=True)
             engine=create_engine(f"sqlite:///{self.database_path}")
             
+            # pyrefly: ignore [bad-argument-type]
             df.to_sql(self.table_name,con=engine,index=False,if_exists="replace")
             logger.info(f"Data pushed to database table '{self.table_name}' successfully")
             
@@ -44,13 +45,14 @@ class DataIngestion():
             logger.info("Feteching the data from database")
             engine=create_engine(f"sqlite:///{self.database_path}")
             
+            # pyrefly: ignore [bad-argument-type]
             df=pd.read_sql(sql=f"SELECT * FROM {self.table_name}",con=engine)
             
             logger.info("Data loaded sucessfully from the database")
             
             return df
         
-        except Exception as e:m# noqa: BLE001
+        except Exception as e: # noqa: BLE001
             logger.error("Data did not laod from the database")
             raise CustomException(e,sys) # type: ignore
         
