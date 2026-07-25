@@ -65,38 +65,50 @@ class PredictionPipeline:
                 probability = self.model.predict_proba(transformed_data)[0][1]
 
             # SHAP Explainability
-            # Using TreeExplainer if possible, else generic Explainer
-            # For a single prediction, we can use a generic explainer with the single instance as background if it's not a tree
+            # Try TreeExplainer → LinearExplainer → KernelExplainer (fallback)
             feature_names = self.preprocessor.get_feature_names_out()
             shap_result = []
-            
+
+            def _extract_top_features(shap_vals_row):
+                feature_importance = list(zip(feature_names, shap_vals_row))
+                feature_importance.sort(key=lambda x: abs(x[1]), reverse=True)
+                result = []
+                for fname, val in feature_importance[:3]:
+                    clean_name = fname.split("__")[-1]
+                    result.append({"feature": clean_name, "impact": float(val)})
+                return result
+
             try:
-                # Tree models work well without a background dataset
+                # Tree models (RandomForest, XGBoost, DecisionTree, etc.)
                 explainer = shap.TreeExplainer(self.model)
                 shap_values = explainer.shap_values(transformed_data)
-                
-                # Check shape (might be a list for multiclass/some models)
                 if isinstance(shap_values, list):
-                    shap_values = shap_values[1] # Take positive class for binary
-                
-                shap_vals = shap_values[0]
-                
-                # Combine feature names and shap values
-                feature_importance = list(zip(feature_names, shap_vals))
-                
-                # Sort by absolute impact
-                feature_importance.sort(key=lambda x: abs(x[1]), reverse=True)
-                
-                # Take top 3
-                for name, val in feature_importance[:3]:
-                    # Clean up onehotencoder prefixes
-                    clean_name = name.split('__')[-1]
-                    shap_result.append({
-                        "feature": clean_name,
-                        "impact": float(val)
-                    })
-            except Exception as e:  # noqa: BLE001
-                logger.warning(f"SHAP explanation failed: {e}")
+                    shap_values = shap_values[1]  # positive class for binary
+                shap_result = _extract_top_features(shap_values[0])
+                logger.info("SHAP via TreeExplainer")
+            except Exception:  # noqa: BLE001
+                try:
+                    # Linear models (LogisticRegression, etc.)
+                    explainer = shap.LinearExplainer(self.model, transformed_data)
+                    shap_values = explainer.shap_values(transformed_data)
+                    if isinstance(shap_values, list):
+                        shap_values = shap_values[1]
+                    shap_result = _extract_top_features(shap_values[0])
+                    logger.info("SHAP via LinearExplainer")
+                except Exception:  # noqa: BLE001
+                    try:
+                        # Generic fallback for any model
+                        explainer = shap.KernelExplainer(
+                            self.model.predict_proba,
+                            shap.sample(transformed_data, 50)
+                        )
+                        shap_values = explainer.shap_values(transformed_data, nsamples=100)
+                        if isinstance(shap_values, list):
+                            shap_values = shap_values[1]
+                        shap_result = _extract_top_features(shap_values[0])
+                        logger.info("SHAP via KernelExplainer")
+                    except Exception as e:  # noqa: BLE001
+                        logger.warning(f"All SHAP explainers failed: {e}")
                 
             return {
                 "prediction": int(prediction),
