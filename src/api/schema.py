@@ -1,0 +1,22 @@
+from pydantic import BaseModel, Field
+
+class CustomerData(BaseModel):
+    gender: str = Field(..., description="Male or Female")
+    SeniorCitizen: int = Field(..., ge=0, le=1)
+    Partner: str = Field(..., description="Yes or No")
+    Dependents: str = Field(..., description="Yes or No")
+    tenure: int = Field(..., ge=0)
+    PhoneService: str = Field(..., description="Yes or No")
+    MultipleLines: str = Field(..., description="Yes or No")
+    InternetService: str = Field(..., description="DSL, Fiber optic, No")
+    OnlineSecurity: str = Field(..., description="Yes or No")
+    OnlineBackup: str = Field(..., description="Yes or No")
+    DeviceProtection: str = Field(..., description="Yes or No")
+    TechSupport: str = Field(..., description="Yes or No")
+    StreamingTV: str = Field(..., description="Yes or No")
+    StreamingMovies: str = Field(..., description="Yes or No")
+    Contract: str = Field(..., description="Month-to-month, One year, Two year")
+    PaperlessBilling: str = Field(..., description="Yes or No")
+    PaymentMethod: str = Field(..., description="Electronic check, Mailed check, Bank transfer (automatic), Credit card (automatic)")
+    MonthlyCharges: float = Field(..., ge=0)
+    TotalCharges: float = Field(..., ge=0)

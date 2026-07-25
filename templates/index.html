@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telco Churn Prediction API</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-color: #f8fafc;
+            --accent-primary: #3b82f6;
+            --accent-hover: #2563eb;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,0.2) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,0.2) 0, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-color);
+            margin: 0;
+            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-weight: 700;
+            font-size: 2.5rem;
+            margin: 0 0 0.5rem 0;
+            background: linear-gradient(to right, #60a5fa, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        p.subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .grid-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #cbd5e1;
+        }
+
+        input, select {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        button {
+            margin-top: 2rem;
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            background: var(--accent-primary);
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        button:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* Results section */
+        #result-section {
+            display: none;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--glass-border);
+            animation: slideUp 0.5s ease forwards;
+        }
+
+        .result-card {
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .risk-high { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+        .risk-low { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success); }
+
+        .prob-text {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        .shap-features {
+            text-align: left;
+            margin-top: 1.5rem;
+        }
+
+        .shap-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #cbd5e1;
+        }
+
+        .shap-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255,255,255,0.05);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+            transition: transform 0.2s;
+        }
+        
+        .shap-item:hover {
+            transform: scale(1.02);
+        }
+
+        .shap-item.positive .impact-value { color: var(--danger); }
+        .shap-item.negative .impact-value { color: var(--success); }
+
+        .loader {
+            display: none;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes slideUp { 
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 2rem; }
+            h1 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Telco Churn Prediction</h1>
+            <p class="subtitle">AI-powered customer retention analysis with MLflow & SHAP</p>
+        </div>
+
+        <form id="prediction-form">
+            <div class="grid-form">
+                <!-- Demographics -->
+                <div class="form-group">
+                    <label>Gender</label>
+                    <select name="gender" required>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Senior Citizen</label>
+                    <select name="SeniorCitizen" required>
+                        <option value="0">No (0)</option>
+                        <option value="1">Yes (1)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Partner</label>
+                    <select name="Partner" required>
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Dependents</label>
+                    <select name="Dependents" required>
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                    </select>
+                </div>
+
+                <!-- Account Info -->
+                <div class="form-group">
+                    <label>Tenure (Months)</label>
+                    <input type="number" name="tenure" min="0" value="12" required>
+                </div>
+                <div class="form-group">
+                    <label>Contract</label>
+                    <select name="Contract" required>
+                        <option value="Month-to-month">Month-to-month</option>
+                        <option value="One year">One year</option>
+                        <option value="Two year">Two year</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Paperless Billing</label>
+                    <select name="PaperlessBilling" required>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Payment Method</label>
+                    <select name="PaymentMethod" required>
+                        <option value="Electronic check">Electronic check</option>
+                        <option value="Mailed check">Mailed check</option>
+                        <option value="Bank transfer (automatic)">Bank transfer (automatic)</option>
+                        <option value="Credit card (automatic)">Credit card (automatic)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Monthly Charges ($)</label>
+                    <input type="number" step="0.01" name="MonthlyCharges" value="50.00" required>
+                </div>
+                <div class="form-group">
+                    <label>Total Charges ($)</label>
+                    <input type="number" step="0.01" name="TotalCharges" value="600.00" required>
+                </div>
+
+                <!-- Services -->
+                <div class="form-group">
+                    <label>Phone Service</label>
+                    <select name="PhoneService" required>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Multiple Lines</label>
+                    <select name="MultipleLines" required>
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Internet Service</label>
+                    <select name="InternetService" required>
+                        <option value="DSL">DSL</option>
+                        <option value="Fiber optic">Fiber optic</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Online Security</label>
+                    <select name="OnlineSecurity" required>
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Online Backup</label>
+                    <select name="OnlineBackup" required>
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Device Protection</label>
+                    <select name="DeviceProtection" required>
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Tech Support</label>
+                    <select name="TechSupport" required>
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Streaming TV</label>
+                    <select name="StreamingTV" required>
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Streaming Movies</label>
+                    <select name="StreamingMovies" required>
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" id="submit-btn">
+                <span id="btn-text">Predict Churn Risk</span>
+                <div class="loader" id="btn-loader"></div>
+            </button>
+        </form>
+
+        <div id="result-section">
+            <div class="result-card">
+                <div id="risk-badge" class="risk-badge risk-low">Low Risk</div>
+                <div class="prob-text" id="prob-text">Probability: 12%</div>
+                
+                <div class="shap-features">
+                    <div class="shap-title">Top Contributing Features (SHAP Analysis)</div>
+                    <div id="shap-container">
+                        <!-- Dynamically inserted -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("prediction-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            
+            const btn = document.getElementById("submit-btn");
+            const btnText = document.getElementById("btn-text");
+            const btnLoader = document.getElementById("btn-loader");
+            const resultSection = document.getElementById("result-section");
+            
+            // Loading state
+            btn.disabled = true;
+            btnText.style.display = "none";
+            btnLoader.style.display = "block";
+            resultSection.style.display = "none";
+
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Convert numericals
+            data.SeniorCitizen = parseInt(data.SeniorCitizen);
+            data.tenure = parseInt(data.tenure);
+            data.MonthlyCharges = parseFloat(data.MonthlyCharges);
+            data.TotalCharges = parseFloat(data.TotalCharges);
+
+            try {
+                const response = await fetch("/predict", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+                
+                if(!response.ok) throw new Error("API Error");
+                
+                const result = await response.json();
+                
+                // Update UI
+                const riskBadge = document.getElementById("risk-badge");
+                const probText = document.getElementById("prob-text");
+                const shapContainer = document.getElementById("shap-container");
+                
+                const isHighRisk = result.prediction === 1;
+                riskBadge.className = `risk-badge ${isHighRisk ? 'risk-high' : 'risk-low'}`;
+                riskBadge.textContent = isHighRisk ? "High Churn Risk" : "Low Churn Retention";
+                
+                const probPct = (result.probability * 100).toFixed(1);
+                probText.textContent = `Probability of churning: ${probPct}%`;
+                
+                shapContainer.innerHTML = "";
+                if (result.top_features && result.top_features.length > 0) {
+                    result.top_features.forEach(f => {
+                        const isPositive = f.impact > 0;
+                        const impactClass = isPositive ? "positive" : "negative";
+                        const impactSign = isPositive ? "Increased risk by" : "Decreased risk by";
+                        const formattedImpact = (Math.abs(f.impact) * 100).toFixed(1);
+                        
+                        shapContainer.innerHTML += `
+                            <div class="shap-item ${impactClass}">
+                                <div class="feature-name">${f.feature}</div>
+                                <div class="impact-value">${impactSign} ${formattedImpact}%</div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    shapContainer.innerHTML = "<div style='color: #94a3b8;'>No feature impact data available for this model type.</div>";
+                }
+                
+                resultSection.style.display = "block";
+                
+            } catch (err) {
+                alert("Failed to get prediction. Ensure the API is running.");
+                console.error(err);
+            } finally {
+                // Restore button
+                btn.disabled = false;
+                btnText.style.display = "inline";
+                btnLoader.style.display = "none";
+            }
+        });
+    </script>
+</body>
+</html>
