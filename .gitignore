@@ -40,3 +40,7 @@ data/processed/
 mle_project.egg-info/*
 
 logs/
+
+# MLflow
+mlruns/
+mlflow.db
