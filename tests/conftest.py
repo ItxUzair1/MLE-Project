@@ -1,6 +1,26 @@
+import os
 import pytest
 import pandas as pd
 import numpy as np
+from unittest.mock import patch
+import mlflow
+
+@pytest.fixture(autouse=True, scope="session")
+def mock_dagshub_init(tmp_path_factory):
+    """
+    Session-scoped fixture that:
+    1. Patches init_dagshub so it never makes network calls.
+    2. Redirects MLflow tracking to a local temp directory.
+    This ensures tests are fast and hermetic in CI.
+    """
+    tmp_dir = tmp_path_factory.mktemp("mlruns")
+    mlflow.set_tracking_uri(f"sqlite:///{tmp_dir}/mlflow.db")
+
+    with patch("src.utils.dagshub_init.init_dagshub", return_value=None), \
+         patch("src.model_evaluation.model_evaluation.init_dagshub", return_value=None), \
+         patch("src.pipeline.training_pipeline.init_dagshub", return_value=None):
+        yield
+
 
 @pytest.fixture
 def dummy_data():

@@ -81,7 +81,7 @@ class PredictionPipeline:
                 )
                 with open(local_path, "rb") as f:
                     preprocessor = pickle.load(f)
-                logger.info("Preprocessor loaded remotely from DAGsHub ✓")
+                logger.info("Preprocessor loaded remotely from DAGsHub")
                 return preprocessor
             except Exception as e:  # noqa: BLE001
                 logger.warning(f"Remote preprocessor download failed: {e}")
@@ -103,7 +103,7 @@ class PredictionPipeline:
                     f"runs:/{run_id}/pipeline/shap_background.npy"
                 )
                 background = np.load(local_path)
-                logger.info(f"SHAP background loaded remotely: {background.shape} ✓")
+                logger.info(f"SHAP background loaded remotely: {background.shape}")
                 return background
             except Exception as e:  # noqa: BLE001
                 logger.warning(f"Remote SHAP background download failed: {e}")
@@ -167,6 +167,7 @@ class PredictionPipeline:
             except Exception as tree_err:  # noqa: BLE001
                 logger.warning(f"TreeExplainer failed: {tree_err}")
                 try:
+                    # pyrefly: ignore [implicit-import]
                     masker      = shap.maskers.Independent(background)
                     explainer   = shap.LinearExplainer(self.model, masker)
                     shap_values = explainer.shap_values(dense_data)
@@ -181,6 +182,7 @@ class PredictionPipeline:
                         predict_fn = (
                             (lambda x: self.model.predict_proba(x)[:, 1])  # noqa: E731
                             if hasattr(self.model, "predict_proba")
+                            # pyrefly: ignore [missing-attribute]
                             else self.model.predict
                         )
                         explainer   = shap.KernelExplainer(predict_fn, bg_sample)

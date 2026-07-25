@@ -13,5 +13,4 @@ COPY . .
 EXPOSE 8000
 
 # DAGsHub credentials are injected at runtime via environment variables.
-# Pass them with: docker run -e DAGSHUB_USER_TOKEN=... -e DAGSHUB_REPO_OWNER=... -e DAGSHUB_REPO_NAME=...
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

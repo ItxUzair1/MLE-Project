@@ -1,8 +1,12 @@
 import os
 import dagshub
 import mlflow
+from dotenv import load_dotenv
 
 from src.logger.logger import get_logger
+
+# Load .env so DAGSHUB_USER_TOKEN is available without manually exporting it
+load_dotenv()
 
 logger = get_logger(__name__)
 
@@ -26,6 +30,10 @@ def init_dagshub() -> None:
 
     repo_owner = os.getenv("DAGSHUB_REPO_OWNER", "muhammaduzair1411")
     repo_name  = os.getenv("DAGSHUB_REPO_NAME",  "my-first-repo")
+    user_token = os.getenv("DAGSHUB_USER_TOKEN")
+
+    if user_token:
+        dagshub.auth.add_app_token(user_token)
 
     dagshub.init(repo_owner=repo_owner, repo_name=repo_name, mlflow=True)
 
