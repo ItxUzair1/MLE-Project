@@ -55,7 +55,7 @@ class DataTransformation:
 
             return df
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error("Data transformation failed")
             raise CustomException(e, sys)  # type: ignore
 
@@ -85,6 +85,6 @@ class DataTransformation:
             logger.info("Preprocessor saved to artifacts/preprocessor.pkl")
             return preprocessor
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error("Failed to create preprocessor")
             raise CustomException(e, sys)  # type: ignore

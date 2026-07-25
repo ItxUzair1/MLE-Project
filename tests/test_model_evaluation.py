@@ -48,7 +48,7 @@ def setup_artifacts(clean_transformed_data, tmp_path):
 
 
 def test_model_evaluation_fallback_and_evaluate(setup_artifacts):
-    model, X_test, y_test = setup_artifacts
+    _, X_test, y_test = setup_artifacts
     evaluator = ModelEvaluation(X_test=X_test, y_test=y_test, model_name="telco-churn-model")
     
     # Test model loading (should fall back to local artifact if not in MLflow registry)

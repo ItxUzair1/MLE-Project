@@ -58,7 +58,7 @@ class HyperparameterTuning:
 
 
         
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise CustomException(e,sys)
 
 
@@ -74,7 +74,7 @@ class HyperparameterTuning:
             logger.info(f"best f1 score: {study.best_value}")
 
             return study.best_params,study.best_value
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error("Tuning crashed")
             raise CustomException(e,sys)
 
@@ -127,7 +127,7 @@ class HyperparameterTuning:
 
             return model, f1
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error("Failed to save tuned model")
             raise CustomException(e, sys)  # type: ignore
 

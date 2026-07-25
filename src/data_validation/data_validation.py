@@ -121,6 +121,6 @@ class DataValidation:
 
             return all_passed
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error("Data validation crashed")
             raise CustomException(e, sys) # type: ignore

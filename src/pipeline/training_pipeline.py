@@ -55,7 +55,7 @@ class TrainingPipeline:
             # Stage 4: Model Training
             logger.info(">>> Stage 4: Model Training <<<")
             trainer = ModelTraining(clean_df=transformed_df)
-            best_model, best_name, best_f1, X_test, y_test = trainer.train()
+            _, best_name, best_f1, X_test, y_test = trainer.train()
             logger.info(f"Stage 4 Complete — Best Model: {best_name} (F1 Score: {best_f1:.4f})")
 
             # Stage 5: Model Evaluation
@@ -74,7 +74,7 @@ class TrainingPipeline:
                 "evaluation_metrics": metrics
             }
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error("Training Pipeline failed during execution")
             raise CustomException(e, sys)  # type: ignore
 

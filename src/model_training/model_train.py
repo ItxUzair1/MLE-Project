@@ -96,7 +96,7 @@ class ModelTraining:
 
             return best_model, best_name, best_f1, X_test, y_test
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error("Model training failed")
             raise CustomException(e, sys)  # type: ignore
 
@@ -125,6 +125,6 @@ class ModelTraining:
 
             return X_train, X_test, y_train, y_test
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error("Data transformation failed in model training")
             raise CustomException(e, sys)  # type: ignore

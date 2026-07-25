@@ -28,11 +28,11 @@ class DataIngestion():
             os.makedirs(os.path.dirname(self.database_path),exist_ok=True)
             engine=create_engine(f"sqlite:///{self.database_path}")
             
-            df.to_sql(self.table_name,engine,if_exists="replace",index=False)
+            df.to_sql(self.table_name,con=engine,index=False,if_exists="replace")
             logger.info(f"Data pushed to database table '{self.table_name}' successfully")
             
             
-        except Exception as e:
+        except Exception as e: # noqa: BLE001
             logger.error("Data did not laod to the database")
             raise CustomException(e,sys) # type: ignore
         
@@ -50,7 +50,7 @@ class DataIngestion():
             
             return df
         
-        except Exception as e:
+        except Exception as e:m# noqa: BLE001
             logger.error("Data did not laod from the database")
             raise CustomException(e,sys) # type: ignore
         

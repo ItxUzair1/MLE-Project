@@ -54,7 +54,7 @@ class ModelEvaluation:
                 return model
             else:
                 logger.warning(f"No versions found for model '{self.model_name}' in MLflow Model Registry")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning(f"Could not load model from MLflow Model Registry: {e}")
 
         # Fallback to local MODEL_PATH artifact
@@ -67,7 +67,7 @@ class ModelEvaluation:
                 return model
             else:
                 raise FileNotFoundError(f"Local model artifact not found at: {MODEL_PATH}")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error("Failed to load model from both MLflow registry and local artifacts")
             raise CustomException(e, sys)  # type: ignore
 
@@ -137,6 +137,6 @@ class ModelEvaluation:
 
             return metrics
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error("Model evaluation failed")
             raise CustomException(e, sys)  # type: ignore
