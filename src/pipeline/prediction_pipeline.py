@@ -95,7 +95,7 @@ class PredictionPipeline:
                         "feature": clean_name,
                         "impact": float(val)
                     })
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.warning(f"SHAP explanation failed: {e}")
                 
             return {

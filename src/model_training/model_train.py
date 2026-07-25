@@ -41,7 +41,6 @@ class ModelTraining:
                 "NaiveBayes":         GaussianNB()
             }
 
-            best_model = None
             best_name  = ""
             best_f1    = 0
 
@@ -80,7 +79,6 @@ class ModelTraining:
                     # track best
                     if f1 > best_f1:
                         best_f1    = f1
-                        best_model = model
                         best_name  = name
 
             logger.info(f"Best model: {best_name} with F1: {best_f1:.4f}")
@@ -99,7 +97,7 @@ class ModelTraining:
                 y_train=y_train, y_test=y_test
             )
             
-            best_params, tuned_f1 = tuner.tune_model(n_trials=10) # 10 trials for speed
+            best_params, _tuned_f1 = tuner.tune_model(n_trials=10) # 10 trials for speed
             tuned_model, final_f1 = tuner.train_best_model(best_params)
             
             return tuned_model, f"{best_name} (Tuned)", final_f1, X_test, y_test
