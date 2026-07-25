@@ -127,7 +127,11 @@ class ModelTraining:
 
             X_train = preprocessor.fit_transform(X_train)
             X_test  = preprocessor.transform(X_test)  # only transform never fit
-            logger.info("Preprocessor applied successfully")
+            
+            with open(PREPROCESSOR_PATH, "wb") as f:
+                pickle.dump(preprocessor, f)
+
+            logger.info("Preprocessor applied and fitted preprocessor saved successfully")
 
             return X_train, X_test, y_train, y_test
 
